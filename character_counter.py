@@ -1,5 +1,6 @@
 from collections import Counter
 from numpy.random import choice
+import re
 
 
 def copy_text_file(text_file):
@@ -96,6 +97,66 @@ def weighted_contextual_chars(text_file):
     return ''.join(char_list)
 
 
+def remove_punctuation(text_file):
+    text = copy_text_file(text_file)
+    for char in ':?;!\".,-\n\ufeff()':
+        text = text.replace(char, ' ')
+    return text
+
+
+def split_text_into_words(text_file):
+    text = re.split(" ", copy_text_file(text_file))
+    return [x for x in text if x != ""]
+
+
+def build_next_word_list(word, word_list):
+    prev_char = ''
+    prev_list = []
+    for x in word_list:
+        if prev_char == word:
+            if prev_char == '':
+                pass
+            else:
+                prev_list.append(x)
+        prev_char = x
+    if len(prev_list) == 0:
+        prev_list.append("no")
+    return prev_list
+
+
+def build_mega_word_dict(text_file):
+    text = split_text_into_words(text_file)
+    mega_dict = {}
+    for word in split_text_into_words(text_file):
+        mega_dict[word] = character_probability(count_list(build_next_word_list(word, text)))
+    return mega_dict
+
+
+def words_weighted_contextual(text_file):
+    mega_dictionary = build_mega_word_dict(text_file)
+    count = len(split_text_into_words(text_file))
+    # count = 1000
+    char = "I"
+    char_list = []
+    for _ in range(count):
+        char = pick_next_character(char, mega_dictionary)
+        char_list.append(char)
+    super_list = []
+    for word in char_list:
+        super_list.append(word)
+        super_list.append(" ")
+    return ''.join(super_list)
+
+
+def word_pick(char, mega_dict):
+    prob_dict = mega_dict.get(char, 'none')
+    return choice(list(prob_dict.keys()), 1, p=list(prob_dict.values()))
+
+
+# file = open("output.txt", "w")
+# file.write(weighted_contextual_chars("character_counter.py"))
+# file.close()
+
 file = open("output.txt", "w")
-file.write(weighted_contextual_chars("character_counter.py"))
+file.write(words_weighted_contextual("repo/markymark.txt"))
 file.close()
